@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: stg_price_paid
+    description: "Cleaned, typed, and standardized HM Land Registry property sales."
+    columns:
+      - name: transaction_id
+        description: "Primary key (brace-stripped uppercase GUID)."
+        tests:
+          - unique
+          - not_null
+      - name: sale_price_gbp
+        description: "Property sale price in GBP (filtered to > 0)."
+        tests:
+          - not_null
+      - name: transfer_date
+        description: "Date of property transfer."
+        tests:
+          - not_null
+      - name: property_type
+        tests:
+          - accepted_values:
+              values: ['Detached', 'Semi-Detached', 'Terraced', 'Flat/Maisonette', 'Other', 'Unknown']
+      - name: tenure_type
+        tests:
+          - accepted_values:
+              values: ['Freehold', 'Leasehold', 'Unknown']
+
+  - name: stg_onspd
+    description: "Standardized UK postcode lookup with decoded country/region names and coordinates."
+    columns:
+      - name: postcode_clean
+        description: "Space-stripped uppercase postcode used as join key."
+        tests:
+          - unique
+          - not_null
+      - name: country_name
+        tests:
+          - not_null

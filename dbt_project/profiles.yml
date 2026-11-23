@@ -1,0 +1,11 @@
+uk_housing_duckdb:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', '../data/uk_housing.duckdb') }}"
+      threads: 4
+    ci:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', '../data/ci_uk_housing.duckdb') }}"
+      threads: 4

@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: dim_geography
+    description: "Conformed UK postcode & administrative geography dimension (SCD Type 2)."
+    columns:
+      - name: geography_sk
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_property_type
+    description: "Conformed property structure, tenure, and new-build attribute dimension."
+    columns:
+      - name: property_type_sk
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_date
+    description: "Conformed calendar & UK fiscal year dimension."
+    columns:
+      - name: date_key
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_property_sales
+    description: "Grain: One row per valid HM Land Registry property sale transaction."
+    columns:
+      - name: transaction_id
+        tests:
+          - unique
+          - not_null
+      - name: date_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: geography_sk
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_geography')
+              field: geography_sk
+      - name: property_type_sk
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_property_type')
+              field: property_type_sk
+      - name: sale_price_gbp
+        tests:
+          - not_null
