@@ -11,13 +11,13 @@ with sales as (
     from {{ ref('stg_price_paid') }}
     where
         record_status != 'D'  -- Exclude deleted deeds
-        {% if is_incremental() %}
-            -- 90-day lookback window catches late-reported HM Land Registry transfers
-            and transfer_date >= (
-                select coalesce(max(prev.transfer_date) - interval 90 day, date '2024-01-01')
-                from {{ this }} as prev
-            )
-        {% endif %}
+    {% if is_incremental() %}
+        -- 90-day lookback window catches late-reported HM Land Registry transfers
+        and transfer_date >= (
+            select coalesce(max(prev.transfer_date) - interval 90 day, date '2024-01-01')
+            from {{ this }} as prev
+        )
+    {% endif %}
 ),
 
 dim_geo as (
