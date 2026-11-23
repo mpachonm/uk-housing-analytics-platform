@@ -83,5 +83,6 @@ jobs:
       - name: Run dbt snapshots, models, and data quality tests
         working-directory: dbt_project
         run: |
+          dbt run --select stg_onspd --profiles-dir . --target ci
           dbt snapshot --profiles-dir . --target ci
           dbt build --profiles-dir . --target ci
