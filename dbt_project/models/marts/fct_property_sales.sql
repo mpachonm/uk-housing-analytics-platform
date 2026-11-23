@@ -12,10 +12,10 @@ with sales as (
     where
         record_status != 'D'  -- Exclude deleted deeds
         {% if is_incremental() %}
-        -- 90-day lookback window catches late-reported HM Land Registry transfers
+            -- 90-day lookback window catches late-reported HM Land Registry transfers
             and transfer_date >= (
-                select coalesce(max(transfer_date) - interval 90 day, date '2024-01-01')
-                from {{ this }} as target
+                select coalesce(max(prev.transfer_date) - interval 90 day, date '2024-01-01')
+                from {{ this }} as prev
             )
         {% endif %}
 ),
