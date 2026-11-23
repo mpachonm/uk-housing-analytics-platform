@@ -1,5 +1,10 @@
 # UK Housing & Geospatial Analytics Platform
+[![Analytics Engineering CI](https://github.com/mpachonm/uk-housing-analytics-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/mpachonm/uk-housing-analytics-platform/actions/workflows/ci.yml)
+[![Deploy dbt Docs](https://github.com/mpachonm/uk-housing-analytics-platform/actions/workflows/docs.yml/badge.svg)](https://mpachonm.github.io/uk-housing-analytics-platform/)
 
+**[Explore Interactive dbt Lineage & Data Catalog](https://mpachonm.github.io/uk-housing-analytics-platform/)**
+
+![UK Housing Market Analytics Dashboard](docs/dashboard_preview.png)
 An end-to-end, zero-cost Analytics Engineering platform modeling **2.38M+ UK property transactions (2024–2026)** enriched with **2.7M+ UK postcodes** using **Python, DuckDB, dbt Core, and GitHub Actions**.
 
 ## Architecture

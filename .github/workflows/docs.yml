@@ -1,0 +1,109 @@
+name: Deploy dbt Docs to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy-docs:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Seed lightweight catalog schema for dbt docs
+        run: |
+          mkdir -p data
+          python -c "
+          import duckdb
+          con = duckdb.connect('data/ci_uk_housing.duckdb')
+          con.execute('CREATE SCHEMA bronze;')
+          con.execute('''
+            CREATE TABLE bronze.raw_price_paid AS
+            SELECT
+              '{11111111-1111-1111-1111-111111111111}' AS transaction_id,
+              450000::BIGINT AS price,
+              TIMESTAMP '2025-06-15 00:00:00' AS transfer_date,
+              'SW1A 1AA' AS postcode,
+              'D' AS property_type,
+              'N' AS old_new,
+              'F' AS duration,
+              '10' AS paon,
+              NULL::VARCHAR AS saon,
+              'DOWNING STREET' AS street,
+              NULL::VARCHAR AS locality,
+              'LONDON' AS town_city,
+              'CITY OF WESTMINSTER' AS district,
+              'GREATER LONDON' AS county,
+              'A' AS ppd_category_type,
+              'A' AS record_status,
+              CURRENT_TIMESTAMP AS _loaded_at,
+              'ci_fixture.csv' AS _source_file
+          ''')
+          con.execute('''
+            CREATE TABLE bronze.raw_onspd AS
+            SELECT
+              'SW1A1AA' AS pcd,
+              'SW1A 1AA' AS pcd2,
+              'SW1A 1AA' AS pcds,
+              '198001' AS date_introduced,
+              NULL::VARCHAR AS date_terminated,
+              'E13000001' AS county_code,
+              'E09000033' AS local_authority_code,
+              'E05013806' AS ward_code,
+              'E92000001' AS country_code,
+              'E12000007' AS region_code,
+              51.501009::DOUBLE AS latitude,
+              -0.141588::DOUBLE AS longitude,
+              CURRENT_TIMESTAMP AS _loaded_at,
+              'ci_onspd_fixture.csv' AS _source_file
+          ''')
+          con.close()
+          "
+
+      - name: Build dbt models and generate static docs
+        working-directory: dbt_project
+        run: |
+          dbt run --select stg_onspd --profiles-dir . --target ci
+          dbt snapshot --profiles-dir . --target ci
+          dbt build --profiles-dir . --target ci
+          dbt docs generate --profiles-dir . --target ci --static
+
+      - name: Prepare GitHub Pages artifact
+        run: |
+          mkdir -p _site
+          cp dbt_project/target/static_index.html _site/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
