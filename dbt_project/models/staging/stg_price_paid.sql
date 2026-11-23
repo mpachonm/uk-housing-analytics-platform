@@ -26,7 +26,6 @@ cleaned as (
         case upper(trim(old_new))
             when 'Y' then true
             when 'N' then false
-            else null
         end as is_new_build,
 
         case upper(trim(duration))

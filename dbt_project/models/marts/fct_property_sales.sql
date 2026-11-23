@@ -9,14 +9,15 @@
 with sales as (
     select *
     from {{ ref('stg_price_paid') }}
-    where record_status != 'D'  -- Exclude deleted deeds
-    {% if is_incremental() %}
+    where
+        record_status != 'D'  -- Exclude deleted deeds
+        {% if is_incremental() %}
         -- 90-day lookback window catches late-reported HM Land Registry transfers
-        and transfer_date >= (
-            select coalesce(max(transfer_date) - interval 90 day, date '2024-01-01')
-            from {{ this }}
-        )
-    {% endif %}
+            and transfer_date >= (
+                select coalesce(max(transfer_date) - interval 90 day, date '2024-01-01')
+                from {{ this }} as target
+            )
+        {% endif %}
 ),
 
 dim_geo as (
@@ -60,11 +61,13 @@ select
     s._loaded_at as source_loaded_at,
     current_timestamp as dbt_updated_at
 
-from sales s
-left join dim_geo g
-    on s.postcode_clean = g.postcode_clean
-    and g.is_current_record = true
-left join dim_prop p
-    on s.property_type = p.property_type
-    and s.tenure_type = p.tenure_type
-    and coalesce(s.is_new_build, false) = p.is_new_build
+from sales as s
+left join dim_geo as g
+    on
+        s.postcode_clean = g.postcode_clean
+        and g.is_current_record = true
+left join dim_prop as p
+    on
+        s.property_type = p.property_type
+        and s.tenure_type = p.tenure_type
+        and coalesce(s.is_new_build, false) = p.is_new_build
